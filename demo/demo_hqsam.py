@@ -57,7 +57,7 @@ def show_res_multi(masks, scores, input_point, input_label, input_box, filename,
 
 
 if __name__ == "__main__":
-    sam_checkpoint = "./pretrained_checkpoint/sam_hq_vit_l.pth"
+    sam_checkpoint = "./model/sam_hq_vit_l.pth"
     model_type = "vit_l"
     device = "cuda"
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
@@ -74,7 +74,8 @@ if __name__ == "__main__":
         # For images contain single object, we suggest to set hq_token_only = True
         # For quantiative evaluation on COCO/YTVOS/DAVIS/UVO/LVIS etc., we set hq_token_only = False
 
-        image = cv2.imread('demo/input_imgs/example'+str(i)+'.png')
+        img_path = './input_imgs/example'+str(i)+'.png'
+        image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         predictor.set_image(image)
 

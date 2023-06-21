@@ -55,8 +55,9 @@ def show_res_multi(masks, scores, input_point, input_label, input_box, filename,
     plt.savefig(filename +'.png',bbox_inches='tight',pad_inches=-0.1)
     plt.close()
 
+
 if __name__ == "__main__":
-    sam_checkpoint = "./pretrained_checkpoint/sam_vit_l_0b3195.pth"
+    sam_checkpoint = "./model/sam_vit_l_0b3195.pth"
     model_type = "vit_l"
     device = "cuda"
     sam = sam_model_registry_baseline[model_type](checkpoint=sam_checkpoint)
@@ -65,7 +66,7 @@ if __name__ == "__main__":
 
     for i in range(8):
         print("image:   ",i)
-        image = cv2.imread('demo/input_imgs/example'+str(i)+'.png')
+        image = cv2.imread('./input_imgs/example'+str(i)+'.png')
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         predictor.set_image(image)
 
