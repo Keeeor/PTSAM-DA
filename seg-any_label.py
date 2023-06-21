@@ -151,10 +151,10 @@ def create_geo_segany_laebl(root, model_type=VIT_B):
             seg_label = np.where(label == class_id, 0, seg_label)  # 清空原本标注
             seg_label = np.where(segany_mask > 0, class_id, seg_label)  # 更新标注
 
-        plt.figure(figsize=(10, 10))
-        plt.imshow(seg_label)
-        plt.show()
-        plt.close()
+        # plt.figure(figsize=(10, 10))
+        # plt.imshow(seg_label)
+        # plt.show()
+        # plt.close()
         cv2.imwrite(os.path.join(segany_label_path, name), seg_label)
 
 
