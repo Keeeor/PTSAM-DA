@@ -172,6 +172,76 @@ def create_geo_dataset(root):
         # shutil.copyfile(os.path.join(seg_path, lab), os.path.join(seg_val_labels, 'seg_' + lab))
 
 
+def create_small_geo_dataset(root):
+    images_path = os.path.join(root, "compress_image")
+    labels_path = os.path.join(root, "compress_mask")
+    seg_path = os.path.join(root, "seg-any_mask")
+
+    ori_dataset = os.path.join(root, "ori_dataset")
+    ori_train_images = os.path.join(ori_dataset, "train", 'images')
+    ori_train_labels = os.path.join(ori_dataset, "train", 'labels')
+    ori_val_images = os.path.join(ori_dataset, "val", 'images')
+    ori_val_labels = os.path.join(ori_dataset, "val", 'labels')
+    seg_dataset = os.path.join(root, "seg_dataset")
+    seg_train_images = os.path.join(seg_dataset, "train", 'images')
+    seg_train_labels = os.path.join(seg_dataset, "train", 'labels')
+    seg_val_images = os.path.join(seg_dataset, "val", 'images')
+    seg_val_labels = os.path.join(seg_dataset, "val", 'labels')
+
+    if not os.path.exists(ori_train_images):
+        os.makedirs(ori_train_images)
+    if not os.path.exists(ori_train_labels):
+        os.makedirs(ori_train_labels)
+    if not os.path.exists(ori_val_images):
+        os.makedirs(ori_val_images)
+    if not os.path.exists(ori_val_labels):
+        os.makedirs(ori_val_labels)
+    if not os.path.exists(seg_train_images):
+        os.makedirs(seg_train_images)
+    if not os.path.exists(seg_train_labels):
+        os.makedirs(seg_train_labels)
+    if not os.path.exists(seg_val_images):
+        os.makedirs(seg_val_images)
+    if not os.path.exists(seg_val_labels):
+        os.makedirs(seg_val_labels)
+
+    farmland_list = os.listdir(os.path.join(root, 'small_farmland'))
+    greenhouse_list = os.listdir(os.path.join(root, 'small_greenhouse'))
+
+    farmland_train = random.sample(farmland_list, len(farmland_list) * 0.8)
+    farmland_val = list(set(farmland_list) - set(farmland_train))
+
+    greenhouse_train = random.sample(greenhouse_list, len(greenhouse_list) * 0.8)
+    greenhouse_val = list(set(greenhouse_list) - set(greenhouse_train))
+
+    train = farmland_train + greenhouse_train
+    val = farmland_val + greenhouse_val
+
+    # train
+    for img in train:
+        lab = img.replace('jpg', 'png')
+        # images
+        shutil.copyfile(os.path.join(images_path, img), os.path.join(ori_train_images, img))
+        shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_train_images, img))
+        shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_train_images, 'seg_' + img))
+
+        # labels
+        shutil.copyfile(os.path.join(labels_path, lab), os.path.join(ori_train_labels, lab))
+        shutil.copyfile(os.path.join(labels_path, lab), os.path.join(seg_train_labels, lab))
+        shutil.copyfile(os.path.join(seg_path, lab), os.path.join(seg_train_labels, 'seg_' + lab))
+
+    # val
+    for img in val:
+        lab = img.replace('jpg', 'png')
+        shutil.copyfile(os.path.join(images_path, img), os.path.join(ori_val_images, img))
+        shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_val_images, img))
+        # shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_val_images, 'seg_' + img))
+
+        shutil.copyfile(os.path.join(labels_path, lab), os.path.join(ori_val_labels, lab))
+        shutil.copyfile(os.path.join(labels_path, lab), os.path.join(seg_val_labels, lab))
+        # shutil.copyfile(os.path.join(seg_path, lab), os.path.join(seg_val_labels, 'seg_' + lab))
+
+
 def create_CoCo_dataset(root):
     images_path = os.path.join(root, 'images', 'train2017')
     seg_mask_path = os.path.join(root, 'coco_mask')
@@ -369,7 +439,7 @@ def check_VOC_label(root):
 
 if __name__ == '__main__':
     root = '/data/08/compress_0.1_images_1/'
-    create_geo_dataset(root)
+    create_small_geo_dataset(root)
 
     # root = 'D:/Program/segment-anything/data/COCOstuff/coco_mask'
     # check_label(root)
