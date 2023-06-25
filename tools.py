@@ -208,10 +208,10 @@ def create_small_geo_dataset(root):
     farmland_list = os.listdir(os.path.join(root, 'small_farmland'))
     greenhouse_list = os.listdir(os.path.join(root, 'small_greenhouse'))
 
-    farmland_train = random.sample(farmland_list, len(farmland_list) * 0.8)
+    farmland_train = random.sample(farmland_list, int(len(farmland_list) * 0.8))
     farmland_val = list(set(farmland_list) - set(farmland_train))
 
-    greenhouse_train = random.sample(greenhouse_list, len(greenhouse_list) * 0.8)
+    greenhouse_train = random.sample(greenhouse_list, int(len(greenhouse_list) * 0.8))
     greenhouse_val = list(set(greenhouse_list) - set(greenhouse_train))
 
     train = farmland_train + greenhouse_train
