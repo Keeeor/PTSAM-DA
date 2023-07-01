@@ -20,6 +20,28 @@ def show_box(box, ax):
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='red', facecolor=(0, 0, 0, 0), lw=1))
 
 
+def remove_small_block(mask: np.ndarray, thresh_ratio: float):
+    # 导入opencv库
+    import cv2
+
+    mask = mask.astype(np.uint8)
+    # 计算图像面积
+    area = mask.shape[0] * mask.shape[1]
+    # 计算阈值
+    threshold = thresh_ratio * area
+    # 查找图像中的轮廓，返回轮廓列表和层次结构
+    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # 遍历轮廓列表
+    for cnt in contours:
+        # 计算轮廓的面积
+        area = cv2.contourArea(cnt)
+        # 如果面积小于阈值，用黑色填充该轮廓
+        if area < threshold:
+            cv2.drawContours(mask, [cnt], 0, 0, -1)
+
+    return mask
+
+
 def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str):
     """
     Removes small disconnected regions and holes in a mask. Returns the
@@ -112,7 +134,7 @@ def get_Cityscapes_bbox(obj, width, height, padding=0):
     bbox = [max(xmin - padding, 0),
             max(ymin - padding, 0),
             min(xmax + padding, width),
-            min(ymax + padding, height-50)]
+            min(ymax + padding, height - 50)]
     return bbox
 
 
