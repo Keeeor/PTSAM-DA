@@ -222,12 +222,12 @@ def create_small_geo_dataset(root):
         lab = img.replace('jpg', 'png')
         # images
         shutil.copyfile(os.path.join(images_path, img), os.path.join(ori_train_images, img))
-        # shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_train_images, img))
+        shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_train_images, img))
         shutil.copyfile(os.path.join(images_path, img), os.path.join(seg_train_images, 'seg_' + img))
 
         # labels
         shutil.copyfile(os.path.join(labels_path, lab), os.path.join(ori_train_labels, lab))
-        # shutil.copyfile(os.path.join(labels_path, lab), os.path.join(seg_train_labels, lab))
+        shutil.copyfile(os.path.join(labels_path, lab), os.path.join(seg_train_labels, lab))
         shutil.copyfile(os.path.join(seg_path, lab), os.path.join(seg_train_labels, 'seg_' + lab))
 
     # val

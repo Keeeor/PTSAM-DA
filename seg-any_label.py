@@ -76,7 +76,7 @@ ADE20K_classes = list(range(1, 151))
 ADE20K_classes = [27, 30, 45, 47, 64, 82, 94, 101, 103, 104, 106, 114, 117, 120, 144]
 
 
-def create_geo_segany_laebl(root, model_type=VIT_B):
+def create_geo_segany_laebl(root, model_type=VIT_H):
     image_path = os.path.join(root, "compress_image")
     ori_mask_path = os.path.join(root, "compress_mask")
     segany_label_path = os.path.join(root, "seg-any_mask")
