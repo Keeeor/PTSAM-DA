@@ -21,9 +21,11 @@ CLASSES = [i for i in range(255)]
 def seg_laebl_process(root, images, labels, model_type, hq_model):
     image_path = os.path.join(root, images)
     label_path = os.path.join(root, labels)
-    segany_label_path = os.path.join(root, "seg_mask")
-    if not os.path.exists(segany_label_path):
-        os.mkdir(segany_label_path)
+    seg_label_path = os.path.join(root, "seg_mask")
+    if not os.path.exists(seg_label_path):
+        os.mkdir(seg_label_path)
+    else:
+        seg_list = os.listdir(seg_label_path)
 
     # 初始化segment-anything模型
     if hq_model:
@@ -32,11 +34,15 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
         predictor = load_predictor_model(model_type)
 
     for name in tqdm(os.listdir(label_path)):
+        if name in seg_list:
+            continue
         label = Image.open(os.path.join(label_path, name))  # 加载原始标注
         label = np.asarray(label)
         classes = np.unique(label)
 
         image = Image.open(os.path.join(image_path, name.replace('png', 'jpg')))  # 加载图片
+        if image.mode != "RGB":
+            continue
         image = np.asarray(image)
 
         seg_label = label.copy()
@@ -114,7 +120,7 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
         # plt.tight_layout()
         # plt.show()
 
-        cv2.imwrite(os.path.join(segany_label_path, name), seg_label)
+        cv2.imwrite(os.path.join(seg_label_path, name), seg_label)
 
 
 def args_parser():
