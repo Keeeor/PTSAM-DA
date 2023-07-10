@@ -11,7 +11,7 @@ import torch
 from tqdm import tqdm
 
 from label_process import get_geo_bbox, remove_small_regions, show_box, get_Cityscapes_bbox, remove_small_block
-from load_model import load_predictor_model
+from load_model import load_predictor_model, load_predictor_hq_model
 from pycocotools.coco import COCO
 # from shapely import Polygon
 from segment_anything import predictor
@@ -76,7 +76,7 @@ ADE20K_classes = list(range(1, 151))
 ADE20K_classes = [27, 30, 45, 47, 64, 82, 94, 101, 103, 104, 106, 114, 117, 120, 144]
 
 
-def create_geo_segany_laebl(root, model_type=VIT_H):
+def create_geo_segany_laebl(root, model_type, hq_model):
     image_path = os.path.join(root, "compress_image")
     ori_mask_path = os.path.join(root, "compress_mask")
     segany_label_path = os.path.join(root, "seg-any_mask")
@@ -84,7 +84,10 @@ def create_geo_segany_laebl(root, model_type=VIT_H):
         os.mkdir(segany_label_path)
 
     # 初始化segment-anything模型
-    predictor = load_predictor_model(model_type)
+    if hq_model:
+        predictor = load_predictor_hq_model(model_type)
+    else:
+        predictor = load_predictor_model(model_type)
 
     for name in tqdm(os.listdir(ori_mask_path)):
         label = Image.open(os.path.join(ori_mask_path, name))  # 加载原始标注
@@ -96,22 +99,21 @@ def create_geo_segany_laebl(root, model_type=VIT_H):
 
         seg_label = label.copy()
 
-        # seg_label = np.where(seg_label == 1, seg_label, 0)
+        # seg_label = np.where(seg_label == 2, seg_label, 0)
 
-        # fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-        # ax[0].imshow(image)
-        # ax[0].axis('off')
-        #
-        # ax[1].imshow(image)
-        # ax[1].imshow(seg_label, alpha=0.5)
-        # ax[1].axis('off')
+        fig, ax = plt.subplots(1, 5, figsize=(10, 3))
+        ax[0].imshow(image)
+        ax[0].axis('off')
+
+        ax[1].imshow(image)
+        ax[1].imshow(seg_label, alpha=0.5)
+        ax[1].axis('off')
 
         # segany模型加载图片
         predictor.set_image(image)
 
         for class_id in classes:
             if class_id not in GEO_CLASSES:
-            # if class_id != 1:
                 continue
             ori_mask = np.where(label == class_id, 1, 0)
 
@@ -126,19 +128,30 @@ def create_geo_segany_laebl(root, model_type=VIT_H):
                 input_box = np.array([x, y, x + w, y + h])
 
                 # show_box(input_box, plt.gca())
-                masks, _, _ = predictor.predict(
-                    point_coords=None,
-                    point_labels=None,
-                    box=input_box[None, :],
-                    multimask_output=False,
-                    hq_token_only=False,
-                )
+                if hq_model:
+                    masks, _, _ = predictor.predict(
+                        point_coords=None,
+                        point_labels=None,
+                        box=input_box[None, :],
+                        multimask_output=False,
+                        hq_token_only=False,
+                    )
+                else:
+                    masks, _, _ = predictor.predict(
+                        point_coords=None,
+                        point_labels=None,
+                        box=input_box[None, :],
+                        multimask_output=False,
+                    )
 
                 mask = masks[0]
                 mask, _ = remove_small_regions(mask, 1000, "holes")
                 mask, _ = remove_small_regions(mask, 1000, "islands")
                 segany_mask = np.where(mask, class_id, segany_mask)
 
+            ax[2].imshow(image)
+            ax[2].imshow(segany_mask, alpha=0.5)
+            ax[2].axis('off')
 
             # 借助原始标签修复识别结果
             xor_mask = np.where(ori_mask == segany_mask, 0, 1)
@@ -147,16 +160,19 @@ def create_geo_segany_laebl(root, model_type=VIT_H):
             if (np.sum(xor_mask == 1) / ori_mask.size) > 0.5:
                 continue
 
-            xor_mask = remove_small_block(xor_mask, 0.07)
+            xor_mask = remove_small_block(xor_mask, 0.05)
+            ax[3].imshow(xor_mask, alpha=0.5)
+            ax[3].axis('off')
 
             segany_mask = np.where(xor_mask > 0, class_id, segany_mask)  # 修补标注
             seg_label = np.where(label == class_id, 0, seg_label)  # 清空原本标注
             seg_label = np.where(segany_mask > 0, class_id, seg_label)  # 更新标注
 
-        # ax[2].imshow(image)
-        # ax[2].imshow(seg_label, alpha=0.5)
-        # ax[2].axis('off')
-        # plt.show()
+        ax[4].imshow(image)
+        ax[4].imshow(seg_label, alpha=0.5)
+        ax[4].axis('off')
+        plt.tight_layout()
+        plt.show()
 
         cv2.imwrite(os.path.join(segany_label_path, name), seg_label)
 
@@ -429,10 +445,10 @@ def create_ADE20K_segany_laebl(root, model_type):
     print("共修改图片标注数量：" + str(count))
 
 
-def create_segany_label(root, dataset_type, model_type):
+def create_segany_label(root, dataset_type, model_type, hq_model):
     assert dataset_type in DATASET_TYPE, 'DataSet Type Error'
     if dataset_type is DATASET_TYPE[0]:
-        create_geo_segany_laebl(root, model_type)
+        create_geo_segany_laebl(root, model_type, hq_model)
     elif dataset_type is DATASET_TYPE[1]:
         create_Cityscapes_segany_laebl(root, model_type)
     elif dataset_type is DATASET_TYPE[2]:
@@ -442,11 +458,12 @@ def create_segany_label(root, dataset_type, model_type):
 
 
 if __name__ == '__main__':
-    # root = 'D:\Desktop\classes_08\merge_house\compress_0.1_images_1\idea'
-    root = '/data/08/compress_0.1_images_1'
+    root = 'D:\Desktop\classes_08\merge_house\compress_0.1_images_1\idea'
+    # root = '/data/08/compress_0.1_images_1'
     # geo, Cityscapes, CoCOo, ADE20K
     dataset_type = "geo"
     # VIT_H(BIG),VIT_L，VIT_B(SMALL)
+    hq_model = False
     model_type = VIT_H
-    create_segany_label(root, dataset_type, model_type)
-    create_geo_dataset(root)
+    create_segany_label(root, dataset_type, model_type, hq_model)
+    # create_geo_dataset(root)

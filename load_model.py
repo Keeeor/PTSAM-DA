@@ -12,7 +12,7 @@ hq_model = {
 }
 
 def load_predictor_model(model_type, device="cuda"):
-    sam_checkpoint = hq_model[model_type]
+    sam_checkpoint = model[model_type]
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     sam.to(device)
     print("Loaded Model: " + sam_checkpoint)
@@ -21,6 +21,23 @@ def load_predictor_model(model_type, device="cuda"):
 
 
 def load_generator_model(model_type, device="cuda"):
+    sam_checkpoint = model[model_type]
+    device = device
+    sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+    sam.to(device)
+    generator = SamAutomaticMaskGenerator(sam)
+    return generator
+
+def load_predictor_hq_model(model_type, device="cuda"):
+    sam_checkpoint = hq_model[model_type]
+    sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+    sam.to(device)
+    print("Loaded Model: " + sam_checkpoint)
+    predictor = SamPredictor(sam)
+    return predictor
+
+
+def load_generator_hq_model(model_type, device="cuda"):
     sam_checkpoint = hq_model[model_type]
     device = device
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
