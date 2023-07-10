@@ -43,13 +43,13 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
 
         # seg_label = np.where(seg_label == 2, seg_label, 0)
 
-        fig, ax = plt.subplots(1, 4, figsize=(10, 3))
-        ax[0].imshow(image)
-        ax[0].axis('off')
+        # fig, ax = plt.subplots(1, 4, figsize=(10, 3))
+        # ax[0].imshow(image)
+        # ax[0].axis('off')
 
         # ax[1].imshow(image)
-        ax[1].imshow(seg_label, alpha=0.5)
-        ax[1].axis('off')
+        # ax[1].imshow(seg_label, alpha=0.5)
+        # ax[1].axis('off')
 
         # segany模型加载图片
         predictor.set_image(image)
@@ -92,8 +92,8 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
                 seg_mask = np.where(mask, class_id, seg_mask)
 
                 # ax[2].imshow(image)
-                ax[2].imshow(seg_mask, alpha=0.5)
-                ax[2].axis('off')
+                # ax[2].imshow(seg_mask, alpha=0.5)
+                # ax[2].axis('off')
 
             # 借助原始标签修复识别结果
             xor_mask = np.where(obj_mask == seg_mask, 0, 1)
@@ -109,10 +109,10 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
             seg_label = np.where(seg_mask > 0, class_id, seg_label)  # 更新标注
 
         # ax[3].imshow(image)
-        ax[3].imshow(seg_label, alpha=0.5)
-        ax[3].axis('off')
-        plt.tight_layout()
-        plt.show()
+        # ax[3].imshow(seg_label, alpha=0.5)
+        # ax[3].axis('off')
+        # plt.tight_layout()
+        # plt.show()
 
         cv2.imwrite(os.path.join(segany_label_path, name), seg_label)
 
