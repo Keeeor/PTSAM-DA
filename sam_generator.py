@@ -28,7 +28,7 @@ def seg_image_process(root, images, new_images, model_type, hq_model):
     if hq_model:
         generator = load_generator_hq_model(model_type)
     else:
-        generator = load_generator_model(model_type, device="cpu")
+        generator = load_generator_model(model_type)
 
     for name in tqdm(os.listdir(image_path)):
         image = Image.open(os.path.join(image_path, name))  # 加载图片
