@@ -15,7 +15,7 @@ from label_process import get_geo_bbox, remove_small_regions, show_box, remove_s
 from load_model import load_predictor_model, load_predictor_hq_model
 
 CLASSES = [1, 2]
-CLASSES = [i for i in range(255)]
+CLASSES = [i for i in range(1,255)]
 
 
 def seg_laebl_process(root, images, labels, model_type, hq_model):
@@ -24,8 +24,8 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
     seg_label_path = os.path.join(root, "seg_mask")
     if not os.path.exists(seg_label_path):
         os.mkdir(seg_label_path)
-    else:
-        seg_list = os.listdir(seg_label_path)
+
+    seg_list = os.listdir(seg_label_path)
 
     # 初始化segment-anything模型
     if hq_model:
@@ -108,7 +108,7 @@ def seg_laebl_process(root, images, labels, model_type, hq_model):
             if (np.sum(xor_mask == 1) / obj_mask.size) > 0.5:
                 continue
 
-            xor_mask = remove_small_block(xor_mask, 0.05)
+            xor_mask = remove_small_block(xor_mask, 0.01)
 
             seg_mask = np.where(xor_mask > 0, class_id, seg_mask)  # 修补标注
             seg_label = np.where(label == class_id, 0, seg_label)  # 清空原本标注

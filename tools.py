@@ -1,7 +1,8 @@
 import os
 import shutil
 import random
-
+from label_process import remove_small_regions, show_box, remove_small_block
+from load_model import load_predictor_model, load_predictor_hq_model
 from tqdm import tqdm
 
 import matplotlib.pyplot as plt
@@ -437,9 +438,135 @@ def check_VOC_label(root):
         #     print(label + ":" + str(classes))
 
 
+def seg_laebl_play():
+    hq_model = False
+    root = 'D:\Desktop\classes_08\merge_house\compress_0.1_images_1\idea'
+    image_path = os.path.join(root, 'compress_image')
+    label_path = os.path.join(root, 'compress_mask')
+    seg_label_path = os.path.join(root, "seg_mask")
+    if not os.path.exists(seg_label_path):
+        os.mkdir(seg_label_path)
+
+    # 初始化segment-anything模型
+    if hq_model:
+        predictor = load_predictor_hq_model('vit_h')
+    else:
+        predictor = load_predictor_model('vit_h')
+
+    label = Image.open(os.path.join(label_path, 'image_1.png'))  # 加载原始标注
+    label = np.asarray(label)
+    classes = np.unique(label)
+
+    image = Image.open(os.path.join(image_path, 'image_1.jpg'))  # 加载图片
+    image = np.asarray(image)
+
+    seg_label = label.copy()
+
+    # seg_label = np.where(seg_label == 2, seg_label, 0)
+
+    fig, ax = plt.subplots(1, 4, figsize=(10, 3))
+    ax[0].imshow(image)
+    ax[0].axis('off')
+
+    ax[1].imshow(image)
+    ax[1].imshow(seg_label, alpha=0.5)
+    ax[1].axis('off')
+
+    # segany模型加载图片
+    predictor.set_image(image)
+
+    for class_id in classes:
+        if class_id not in [1,2]:
+            continue
+        obj_mask = np.where(seg_label == class_id, 1, 0)
+
+        show_mask = obj_mask.copy()
+        if class_id ==1:
+            show_mask = np.where(show_mask == 1, 128, show_mask)
+        elif class_id ==2:
+            show_mask = np.where(show_mask == 1, 255, show_mask)
+        show_mask = show_mask.astype(np.uint8)
+
+        cv2.imwrite(os.path.join(seg_label_path, str(class_id) + "_labelclass.png"), show_mask)
+
+
+
+
+        # 根据mask计算框并使用seg识别
+        obj_mask = obj_mask.astype(np.uint8)
+        contours, _ = cv2.findContours(obj_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        seg_mask = np.zeros_like(label)
+        box_mask = np.zeros_like(label)
+        box_mask = cv2.cvtColor(box_mask, cv2.COLOR_GRAY2BGR)
+
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            input_box = np.array([x, y, x + w, y + h])
+
+            line = np.array([[x, y], [x, y + h], [x + w, y + h], [x + w, y]])
+            cv2.polylines(box_mask, [line], True, (0, 0, 255), 5)
+
+            cv2.imwrite(os.path.join(seg_label_path, str(class_id)+"_boxesclass.png"), box_mask)
+
+            # show_box(input_box, plt.gca())
+            if hq_model:
+                masks, _, _ = predictor.predict(
+                    point_coords=None,
+                    point_labels=None,
+                    box=input_box[None, :],
+                    multimask_output=False,
+                    hq_token_only=False,
+                )
+            else:
+                masks, _, _ = predictor.predict(
+                    point_coords=None,
+                    point_labels=None,
+                    box=input_box[None, :],
+                    multimask_output=False,
+                )
+
+            mask = masks[0]
+            mask, _ = remove_small_regions(mask, 1000, "holes")
+            mask, _ = remove_small_regions(mask, 1000, "islands")
+            seg_mask = np.where(mask, class_id, seg_mask)
+
+            # ax[2].imshow(image)
+            ax[2].imshow(show_mask, alpha=0.5)
+            ax[2].axis('off')
+
+        if class_id ==1:
+            sam_mask = np.where(seg_mask == 1, 128, seg_mask)
+        elif class_id ==2:
+            sam_mask = np.where(seg_mask == 2, 255, seg_mask)
+        sam_mask = sam_mask.astype(np.uint8)
+        cv2.imwrite(os.path.join(seg_label_path, str(class_id) + "_samclass.png"), sam_mask)
+        # 借助原始标签修复识别结果
+        xor_mask = np.where(obj_mask == seg_mask, 0, 1)
+
+        # 避免识别反的情况
+        if (np.sum(xor_mask == 1) / obj_mask.size) > 0.5:
+            continue
+
+        xor_mask = remove_small_block(xor_mask, 0.01)
+
+        seg_mask = np.where(xor_mask > 0, class_id, seg_mask)  # 修补标注
+        seg_label = np.where(label == class_id, 0, seg_label)  # 清空原本标注
+        seg_label = np.where(seg_mask > 0, class_id, seg_label)  # 更新标注
+
+    ax[3].imshow(image)
+    ax[3].imshow(seg_label, alpha=0.5)
+    ax[3].axis('off')
+    plt.tight_layout()
+    plt.show()
+
+    # cv2.imwrite(os.path.join(seg_label_path, name), seg_label)
+
+
 if __name__ == '__main__':
-    root = '/data/08/compress_0.1_images_1/'
-    create_small_geo_dataset(root)
+    seg_laebl_play()
+    # root = '/data/08/compress_0.1_images_1/'
+    # create_small_geo_dataset(root)
 
     # root = 'D:/Program/segment-anything/data/COCOstuff/coco_mask'
     # check_label(root)
