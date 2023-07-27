@@ -50,9 +50,9 @@ def seg_image_process(root, images, new_images, model_type, hq_model):
 
                 new_mask += sub_mask
 
-        remove_small_block(new_mask, 0.01)
-
-        new_image = np.where(new_mask > 0, image, 0)
+        new_mask = remove_small_block(new_mask, 0.01)
+        rgb_mask = cv2.cvtColor(new_mask,cv2.COLOR_GRAY2RGB)
+        new_image = np.where(rgb_mask > 0, image, 0)
 
         cv2.imwrite(os.path.join(new_images_path, 'sam_' + name), new_image)
 
