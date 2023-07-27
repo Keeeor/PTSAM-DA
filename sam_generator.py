@@ -1,21 +1,15 @@
 import argparse
-import json
 import os
-import shutil
-
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-import torch
+
 
 from tqdm import tqdm
 
-from label_process import get_geo_bbox, remove_small_regions, show_box, remove_small_block
+from label_process import  remove_small_block
 from load_model import load_generator_hq_model, load_generator_model
-
-CLASSES = [1, 2]
-CLASSES = [i for i in range(1, 255)]
 
 
 def seg_image_process(root, images, new_images, model_type, hq_model):
