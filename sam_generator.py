@@ -31,8 +31,8 @@ def seg_image_process(data_path, save_path, model_type, hq_model):
         image_path = os.path.join(data_path, cls)
         new_image_path = os.path.join(save_path, cls)
 
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        if not os.path.exists(new_image_path):
+            os.makedirs(new_image_path)
 
         for name in tqdm(os.listdir(image_path)):
             image = Image.open(os.path.join(image_path, name))  # 加载图片
