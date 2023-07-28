@@ -21,8 +21,24 @@ def show_box(box, ax):
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='red', facecolor=(0, 0, 0, 0), lw=1))
 
 
-def remove_small_block(mask: np.ndarray, thresh_ratio: float):
+def show_anns(anns):
+    if len(anns) == 0:
+        return
+    sorted_anns = sorted(anns, key=(lambda x: x['area']), reverse=True)
+    ax = plt.gca()
+    ax.set_autoscale_on(False)
+    polygons = []
+    color = []
+    for ann in sorted_anns:
+        m = ann['segmentation']
+        img = np.ones((m.shape[0], m.shape[1], 3))
+        color_mask = np.random.random((1, 3)).tolist()[0]
+        for i in range(3):
+            img[:, :, i] = color_mask[i]
+        ax.imshow(np.dstack((img, m * 0.35)))
 
+
+def remove_small_block(mask: np.ndarray, thresh_ratio: float):
     mask = mask.astype(np.uint8)
     # 计算图像面积
     area = mask.shape[0] * mask.shape[1]
@@ -71,6 +87,24 @@ def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str):
             fill_labels = [int(np.argmax(sizes)) + 1]
     mask = np.isin(regions, fill_labels)
     return mask, True
+
+
+def segment_boxes(h, w):
+    boxes = []
+    h1 = 0.2 * h
+    h2 = 0.8 * h
+    w1 = 0.2 * w
+    w2 = 0.8 * w
+    box1 = [0, 0, w1, h]
+    box2 = [w2, 0, w, h]
+    box3 = [w1, 0, w2, h1]
+    box4 = [w1, h2, w2, h]
+    boxes.append(box1)
+    boxes.append(box2)
+    boxes.append(box3)
+    boxes.append(box4)
+
+    return boxes
 
 
 def get_geo_bbox(seg_json, padding=0):
