@@ -27,7 +27,10 @@ def seg_image_process(data_path, save_path, model_type, hq_model):
     data_path = os.path.join(data_path)
     class_list = os.listdir(data_path)
 
+    index = 0
     for cls in class_list:
+        print('The number of completed categories :' + str(index))
+        index += 1
         image_path = os.path.join(data_path, cls)
         new_image_path = os.path.join(save_path, cls)
 
