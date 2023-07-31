@@ -6,6 +6,7 @@ from pycocotools.coco import COCO
 from tqdm import tqdm
 
 data_dir = "/data/coco/"
+data_dir = 'D:/Program/segment-anything/data/COCOstuff/'
 
 types = ['train','val']
 for type in types:
@@ -17,20 +18,21 @@ for type in types:
 
     imgs = coco.imgs
     imgAnns = coco.imgToAnns
-
+    ann_list = imgAnns.keys()
     # Iterate over images
-    for image_id in tqdm(imgAnns):
+    for img_id in tqdm(imgs):
         # Get image ID and filename
-        img = imgs[image_id]
+        img = imgs[img_id]
         h = img['height']
         w = img['width']
         name = img['file_name'].replace('jpg', 'png')
         mask = np.zeros((h, w))
-        anns = imgAnns[image_id]
 
-        for ann in anns:
-            category_id = ann['category_id']
-            tmp = coco.annToMask(ann)
-            mask = np.where(tmp > 0, category_id, mask)
+        if img_id in ann_list:
+            anns = imgAnns[img_id]
+            for ann in anns:
+                category_id = ann['category_id']
+                tmp = coco.annToMask(ann)
+                mask = np.where(tmp > 0, category_id, mask)
 
         cv2.imwrite(os.path.join(label_dir, name), mask)
