@@ -89,12 +89,12 @@ def remove_small_regions(mask: np.ndarray, area_thresh: float, mode: str):
     return mask, True
 
 
-def segment_boxes(h, w):
+def segment_boxes(h, w, edge):
     boxes = []
-    h1 = 0.2 * h
-    h2 = 0.8 * h
-    w1 = 0.2 * w
-    w2 = 0.8 * w
+    h1 = edge * h
+    h2 = (1 - edge) * h
+    w1 = edge * w
+    w2 = (1 - edge) * w
     box1 = [0, 0, w1, h]
     box2 = [w2, 0, w, h]
     box3 = [w1, 0, w2, h1]

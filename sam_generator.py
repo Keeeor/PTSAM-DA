@@ -11,7 +11,7 @@ from label_process import remove_small_block, show_anns, segment_boxes, remove_s
 from load_model import load_generator_hq_model, load_generator_model, load_predictor_hq_model, load_predictor_model
 
 
-def seg_image_process(data_path, save_path, model_type, hq_model):
+def seg_image_process(data_path, save_path, model_type, hq_model, edge):
     # 初始化generator模型 不需要提示框
     # if hq_model:
     #     generator = load_generator_hq_model(model_type)
@@ -50,7 +50,7 @@ def seg_image_process(data_path, save_path, model_type, hq_model):
             new_mask = np.zeros((h, w))
 
             #  图像分块策略
-            boxes = segment_boxes(h, w)
+            boxes = segment_boxes(h, w, edge)
 
             for input_box in boxes:
                 input_box = np.array(input_box)
@@ -113,6 +113,7 @@ def args_parser():
     parser.add_argument('save_path', type=str, help="Path of the new dataset.")
     parser.add_argument('--model_type', type=str, default='vit_h', help="vit_h,vit_l,vit_b")
     parser.add_argument('--hq_sam', type=bool, default=False, help="Whether to use hq_sam")
+    parser.add_argument('--edge', type=float, default=0.2, help="The distance for edge cropping")
     args = parser.parse_args()
     return args
 
@@ -123,10 +124,11 @@ def main(args):
     save_path = args.save_path
     model_type = args.model_type
     hq_sam = args.hq_sam
+    edge = args.edge
     if not os.path.exists(data_path):
         print("Dataset not found in " + data_path)
         return
-    seg_image_process(data_path, save_path, model_type, hq_sam)
+    seg_image_process(data_path, save_path, model_type, hq_sam, edge)
 
 
 if __name__ == '__main__':
